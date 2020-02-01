@@ -1,6 +1,9 @@
+extern crate scheduler;
 use scheduler::*;
 use std::{thread, time};
 use termion::clear;
+
+static mut NEXT_ID: u32 = 1;
 
 // Quantum used each loop 4
 const CPU_CYCLE_QUANTUM_USED: u32 = 4;
@@ -24,23 +27,26 @@ fn main() {
         scheduler = scheduler.schedule_next(CONTEXT_SWITCH_TIME);
         cycle_count = cycle_count + 1;
         thread::sleep(LOOP_PAUSE);
-        println!();
+        println!("{}", clear::All);
     }
 }
 
-fn get_process(cpu_cycle: u32) -> Option<Process> {
+fn get_process(cpu_cycle: u32) -> Option<FakeProcess> {
     let choose_process = cpu_cycle % 20;
-    match choose_process {
-        0 => Some(Process::new(0, 60)),
-        3 => Some(Process::new(1, 20)),
-        5 => Some(Process::new(2, 10)),
-        9 => Some(Process::new(3, 70)),
-        10 => Some(Process::new(4, 50)),
-        12 => Some(Process::new(5, 30)),
-        14 => Some(Process::new(6, 40)),
-        16 => Some(Process::new(7, 50)),
-        17 => Some(Process::new(8, 70)),
-        19 => Some(Process::new(9, 20)),
-        _ => None,
+    unsafe {
+        NEXT_ID = NEXT_ID + 1;
+        match choose_process {
+            0 => Some(FakeProcess::new(NEXT_ID, 60)),
+            3 => Some(FakeProcess::new(NEXT_ID, 20)),
+            5 => Some(FakeProcess::new(NEXT_ID, 10)),
+            9 => Some(FakeProcess::new(NEXT_ID, 70)),
+            10 => Some(FakeProcess::new(NEXT_ID, 50)),
+            12 => Some(FakeProcess::new(NEXT_ID, 30)),
+            14 => Some(FakeProcess::new(NEXT_ID, 40)),
+            16 => Some(FakeProcess::new(NEXT_ID, 50)),
+            17 => Some(FakeProcess::new(NEXT_ID, 70)),
+            19 => Some(FakeProcess::new(NEXT_ID, 20)),
+            _ => None,
+        }
     }
 }
