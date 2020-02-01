@@ -1,5 +1,5 @@
 extern crate scheduler;
-use scheduler::*;
+use scheduler::{algorithms, *};
 use std::{thread, time};
 use termion::clear;
 
@@ -13,18 +13,18 @@ const CONTEXT_SWITCH_TIME: u32 = 0;
 const LOOP_PAUSE: time::Duration = time::Duration::from_millis(1000);
 
 fn main() {
-    let mut scheduler = FIFOScheduler::new();
+    let mut scheduler = Scheduler::new();
     let mut cycle_count = 0;
+    let chosen_algorithm = algorithms::shortest_next;
 
     loop {
-        // Add to scheduler
         if let Some(p) = get_process(cycle_count) {
             scheduler = scheduler.add_process(p);
         }
 
         scheduler = scheduler.execute(CPU_CYCLE_QUANTUM_USED);
         scheduler.print_process_table();
-        scheduler = scheduler.schedule_next(CONTEXT_SWITCH_TIME);
+        scheduler = scheduler.schedule_next(chosen_algorithm, CONTEXT_SWITCH_TIME);
         cycle_count = cycle_count + 1;
         thread::sleep(LOOP_PAUSE);
         println!("{}", clear::All);

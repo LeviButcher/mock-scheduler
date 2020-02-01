@@ -6,6 +6,8 @@ pub struct FakeProcess {
     pub quantum_left: u32,
     pub quantum_ran_for: u32,
     pub total_time: u32,
+    pub quantum_to_run_for: u32,
+    pub time_spent_waiting: u32,
 }
 
 fn subtract_until_zero(a: u32, b: u32) -> u32 {
@@ -23,6 +25,8 @@ impl FakeProcess {
             quantum_left: quantum_run_time,
             quantum_ran_for: 0,
             total_time: 0,
+            quantum_to_run_for: quantum_run_time,
+            time_spent_waiting: 0,
         }
     }
     pub fn execute(&self, quantum_run: u32) -> FakeProcess {
@@ -31,6 +35,8 @@ impl FakeProcess {
             quantum_left: subtract_until_zero(self.quantum_left, quantum_run),
             quantum_ran_for: self.quantum_ran_for + quantum_run,
             total_time: self.total_time + quantum_run,
+            quantum_to_run_for: self.quantum_to_run_for,
+            time_spent_waiting: self.time_spent_waiting,
         }
     }
     pub fn wait(&self, quantum_wait: u32) -> FakeProcess {
@@ -39,6 +45,8 @@ impl FakeProcess {
             quantum_left: self.quantum_left,
             quantum_ran_for: self.quantum_ran_for,
             total_time: self.total_time + quantum_wait,
+            quantum_to_run_for: self.quantum_to_run_for,
+            time_spent_waiting: self.time_spent_waiting + quantum_wait,
         }
     }
     pub fn is_done(&self) -> bool {
