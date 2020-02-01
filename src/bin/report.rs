@@ -1,5 +1,6 @@
 extern crate scheduler;
 use scheduler::{algorithms, *};
+const NUM_OF_PROCESSES: u32 = 10;
 
 fn main() {
     println!("The Scheduler Report - By: Levi Butcher");
@@ -10,64 +11,38 @@ fn main() {
 }
 
 fn run_report(quantum_used: u32, context_switch: u32) {
+    let mut cycle_count = 0;
     let mut fifo_scheduler = Scheduler::new();
     let mut shortest_next_scheduler = Scheduler::new();
     let mut shortest_remain_scheduler = Scheduler::new();
 
-    fifo_scheduler = get_processes()
-        .into_iter()
-        .fold(fifo_scheduler, |acc, curr| {
-            acc.add_process(curr)
-                .execute(quantum_used)
-                .schedule_next(algorithms::first_come, context_switch)
-        });
-
-    shortest_next_scheduler =
-        get_processes()
-            .into_iter()
-            .fold(shortest_next_scheduler, |acc, curr| {
-                acc.add_process(curr)
-                    .execute(quantum_used)
-                    .schedule_next(algorithms::shortest_next, context_switch)
-            });
-
-    shortest_remain_scheduler =
-        get_processes()
-            .into_iter()
-            .fold(shortest_remain_scheduler, |acc, curr| {
-                acc.add_process(curr)
-                    .execute(quantum_used)
-                    .schedule_next(algorithms::shortest_remain, context_switch)
-            });
-
-    // Could clean this up by storing sort algorithm
-    // when constructing scheduler
     loop {
-        if fifo_scheduler.is_queue_empty() {
-            break;
+        if let Some(p) = get_process(cycle_count) {
+            fifo_scheduler = fifo_scheduler.add_process(p);
+            shortest_next_scheduler = shortest_next_scheduler.add_process(p);
+            shortest_remain_scheduler = shortest_remain_scheduler.add_process(p);
         }
+
         fifo_scheduler = fifo_scheduler
             .execute(quantum_used)
             .schedule_next(algorithms::first_come, context_switch);
-    }
 
-    loop {
-        if shortest_next_scheduler.is_queue_empty() {
-            break;
-        }
         shortest_next_scheduler = shortest_next_scheduler
             .execute(quantum_used)
-            .schedule_next(algorithms::shortest_next, context_switch)
-    }
-
-    loop {
-        if shortest_remain_scheduler.is_queue_empty() {
-            break;
-        }
+            .schedule_next(algorithms::shortest_next, context_switch);
 
         shortest_remain_scheduler = shortest_remain_scheduler
             .execute(quantum_used)
-            .schedule_next(algorithms::shortest_remain, context_switch)
+            .schedule_next(algorithms::shortest_remain, context_switch);
+
+        if fifo_scheduler.is_queue_empty()
+            && shortest_remain_scheduler.is_queue_empty()
+            && shortest_remain_scheduler.is_queue_empty()
+        {
+            break;
+        }
+
+        cycle_count = cycle_count + 1;
     }
 
     let schedulers = vec![
@@ -82,7 +57,7 @@ fn run_report(quantum_used: u32, context_switch: u32) {
             x.finished_processes
                 .iter()
                 .fold(0, |acc, curr| acc + curr.total_time)
-                / get_processes().len() as u32
+                / NUM_OF_PROCESSES
         })
         .collect();
 
@@ -92,7 +67,7 @@ fn run_report(quantum_used: u32, context_switch: u32) {
             x.finished_processes
                 .iter()
                 .fold(0, |acc, curr| acc + curr.time_spent_waiting)
-                / get_processes().len() as u32
+                / NUM_OF_PROCESSES
         })
         .collect();
 
@@ -119,17 +94,19 @@ fn run_report(quantum_used: u32, context_switch: u32) {
     println!();
 }
 
-fn get_processes() -> Vec<FakeProcess> {
-    vec![
-        FakeProcess::new(0, 60),
-        FakeProcess::new(1, 20),
-        FakeProcess::new(2, 10),
-        FakeProcess::new(3, 70),
-        FakeProcess::new(4, 50),
-        FakeProcess::new(5, 30),
-        FakeProcess::new(6, 40),
-        FakeProcess::new(7, 50),
-        FakeProcess::new(8, 70),
-        FakeProcess::new(9, 20),
-    ]
+fn get_process(cpu_cycle: u32) -> Option<FakeProcess> {
+    let choose_process = cpu_cycle;
+    match choose_process {
+        0 => Some(FakeProcess::new(1, 60)),
+        3 => Some(FakeProcess::new(2, 20)),
+        5 => Some(FakeProcess::new(3, 10)),
+        9 => Some(FakeProcess::new(4, 70)),
+        10 => Some(FakeProcess::new(5, 50)),
+        12 => Some(FakeProcess::new(6, 30)),
+        14 => Some(FakeProcess::new(7, 40)),
+        16 => Some(FakeProcess::new(8, 50)),
+        17 => Some(FakeProcess::new(9, 70)),
+        19 => Some(FakeProcess::new(10, 20)),
+        _ => None,
+    }
 }

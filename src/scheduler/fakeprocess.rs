@@ -1,6 +1,6 @@
 use std::fmt;
 
-#[derive(Clone)]
+#[derive(Copy, Clone)]
 pub struct FakeProcess {
     pub id: u32,
     pub quantum_left: u32,
