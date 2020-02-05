@@ -2,6 +2,11 @@ mod scheduler;
 pub use crate::scheduler::*;
 use std::cmp;
 
+// struct QueuedProcess {
+//     id: u32,
+//     process: FakeProcess,
+// }
+
 pub struct Scheduler {
     pub process_queue: Vec<FakeProcess>,
     pub finished_processes: Vec<FakeProcess>,
@@ -54,15 +59,22 @@ impl Scheduler {
         F: Fn(&FakeProcess, &FakeProcess) -> cmp::Ordering,
     {
         let mut queue = self.process_queue;
+        let mut finished_processes = self.finished_processes;
+        let scheduled = queue.remove(0);
+
         queue.sort_by(compare);
 
-        let finished_processes = queue.clone().into_iter().filter(|x| x.is_done()).collect();
-
-        let queue = queue
+        let mut queue: Vec<FakeProcess> = queue
             .into_iter()
-            .filter(|x| !x.is_done())
             .map(|x| x.wait(context_switch_cost))
             .collect();
+
+        if scheduled.is_done() {
+            finished_processes.push(scheduled);
+        } else {
+            queue.push(scheduled.wait(context_switch_cost));
+        }
+
         Scheduler {
             process_queue: queue,
             finished_processes,
@@ -135,17 +147,19 @@ mod test {
 
     #[test]
     fn scheduler_schedule_next_by_id_should_schedule_next_process_after_execute() {
-        let run_time = 10;
+        let run_time = 5;
         let switch_cost = 5;
         let expected_process_id = 1;
+
         let scheduler = Scheduler::new()
             .add_process(FakeProcess::new(0, 10))
             .add_process(FakeProcess::new(expected_process_id, 15))
             .execute(run_time)
             .schedule_next(|a, b| a.id.cmp(&b.id), switch_cost);
+
         let curr_process = scheduler.scheduled_process().unwrap();
         assert_eq!(expected_process_id, curr_process.id);
-        assert_eq!(1, scheduler.process_queue.len());
+        assert_eq!(2, scheduler.process_queue.len());
     }
 
     #[test]
@@ -157,7 +171,7 @@ mod test {
             .add_process(FakeProcess::new(1, 15))
             .schedule_next(|a, b| a.id.cmp(&b.id), switch_cost);
 
-        assert_eq!(scheduler.scheduled_process().unwrap().id, 0);
+        assert_eq!(1, scheduler.scheduled_process().unwrap().id);
 
         let total_times: Vec<u32> = scheduler
             .process_queue
@@ -169,14 +183,29 @@ mod test {
     }
 
     #[test]
-    fn scheduler_schedule_next_by_quantum_left_should_by_in_order() {
+    fn scheduler_schedule_next_by_quantum_left_should_be_in_order() {
         let switch_cost = 5;
         let expected_order = vec![2, 3, 1];
         let scheduler = Scheduler::new()
             .add_process(FakeProcess::new(1, 20))
             .add_process(FakeProcess::new(2, 5))
             .add_process(FakeProcess::new(3, 15))
-            .schedule_next(|a, b| a.quantum_left.cmp(&b.quantum_left), switch_cost);
+            .schedule_next(algorithms::shortest_next, switch_cost);
+        let process_order: Vec<u32> = scheduler.process_queue.into_iter().map(|x| x.id).collect();
+        assert_eq!(expected_order, process_order);
+    }
+
+    #[test]
+    fn scheduler_schedule_next_should_not_schedule_previously_ran_process() {
+        let switch_cost = 5;
+        let expected_order = vec![2, 1];
+
+        let scheduler = Scheduler::new()
+            .add_process(FakeProcess::new(1, 20))
+            .add_process(FakeProcess::new(2, 5))
+            .execute(5)
+            .schedule_next(algorithms::first_come, switch_cost);
+
         let process_order: Vec<u32> = scheduler.process_queue.into_iter().map(|x| x.id).collect();
         assert_eq!(expected_order, process_order);
     }
