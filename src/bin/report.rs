@@ -1,5 +1,6 @@
 extern crate scheduler;
 use scheduler::{algorithms, *};
+use std::cmp;
 const NUM_OF_PROCESSES: u32 = 10;
 
 fn main() {
@@ -11,52 +12,27 @@ fn main() {
 }
 
 fn run_report(quantum_used: u32, context_switch: u32) {
-    let mut cycle_count = 0;
-    let mut fifo_scheduler = Scheduler::new();
-    let mut shortest_next_scheduler = Scheduler::new();
-    let mut shortest_remain_scheduler = Scheduler::new();
-
-    loop {
-        if let Some(p) = get_process(cycle_count) {
-            fifo_scheduler = fifo_scheduler.add_process(p);
-            shortest_next_scheduler = shortest_next_scheduler.add_process(p);
-            shortest_remain_scheduler = shortest_remain_scheduler.add_process(p);
-        }
-
-        fifo_scheduler = fifo_scheduler
-            .execute(quantum_used)
-            .schedule_next(algorithms::first_come, context_switch);
-
-        shortest_next_scheduler = shortest_next_scheduler
-            .execute(quantum_used)
-            .schedule_next(algorithms::shortest_next, context_switch);
-
-        shortest_remain_scheduler = shortest_remain_scheduler
-            .execute(quantum_used)
-            .schedule_next(algorithms::shortest_remain, context_switch);
-
-        if fifo_scheduler.is_queue_empty()
-            && shortest_remain_scheduler.is_queue_empty()
-            && shortest_remain_scheduler.is_queue_empty()
-        {
-            break;
-        }
-
-        cycle_count = cycle_count + 1;
-    }
-
-    let schedulers = vec![
-        fifo_scheduler,
-        shortest_next_scheduler,
-        shortest_remain_scheduler,
+    let schedule_algorithms: Vec<fn(&QueuedProcess, &QueuedProcess) -> cmp::Ordering> = vec![
+        algorithms::first_come,
+        algorithms::shortest_next,
+        algorithms::shortest_remain,
     ];
+    let schedulers = vec![Scheduler::new(), Scheduler::new(), Scheduler::new()];
+
+    let schedulers: Vec<Scheduler> = schedule_algorithms
+        .into_iter()
+        .zip(schedulers.into_iter())
+        .map(|(algorithm, scheduler)| {
+            run_process_on_scheduler(scheduler, &algorithm, quantum_used, context_switch)
+        })
+        .collect();
 
     let average_turnarounds: Vec<u32> = schedulers
         .iter()
         .map(|x| {
             x.finished_processes
                 .iter()
-                .fold(0, |acc, curr| acc + curr.total_time)
+                .fold(0, |acc, curr| acc + curr.process.get_turnaround_time())
                 / NUM_OF_PROCESSES
         })
         .collect();
@@ -66,7 +42,7 @@ fn run_report(quantum_used: u32, context_switch: u32) {
         .map(|x| {
             x.finished_processes
                 .iter()
-                .fold(0, |acc, curr| acc + curr.time_spent_waiting)
+                .fold(0, |acc, curr| acc + curr.process.time_spent_waiting)
                 / NUM_OF_PROCESSES
         })
         .collect();
@@ -109,4 +85,32 @@ fn get_process(cpu_cycle: u32) -> Option<FakeProcess> {
         19 => Some(FakeProcess::new(10, 20)),
         _ => None,
     }
+}
+
+fn run_process_on_scheduler<F>(
+    scheduler: Scheduler,
+    sort: &F,
+    quantum_time: u32,
+    context_switch: u32,
+) -> Scheduler
+where
+    F: Fn(&QueuedProcess, &QueuedProcess) -> cmp::Ordering,
+{
+    let mut cycle_count = 0;
+    let mut scheduler = scheduler;
+    loop {
+        if let Some(p) = get_process(cycle_count) {
+            scheduler = scheduler.add_process(p);
+        }
+
+        scheduler = scheduler
+            .execute(quantum_time)
+            .schedule_next(sort, context_switch);
+
+        cycle_count = cycle_count + 1;
+        if scheduler.is_queue_empty() {
+            break;
+        }
+    }
+    scheduler
 }
