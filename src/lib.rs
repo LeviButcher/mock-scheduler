@@ -2,27 +2,6 @@ mod scheduler;
 pub use crate::scheduler::*;
 use std::cmp;
 
-#[derive(Copy, Clone)]
-pub struct QueuedProcess {
-    pub entered_number: u32,
-    pub process: FakeProcess,
-}
-
-impl QueuedProcess {
-    fn wait(self, quantum_wait: u32) -> QueuedProcess {
-        QueuedProcess {
-            entered_number: self.entered_number,
-            process: self.process.wait(quantum_wait),
-        }
-    }
-    pub fn execute(&self, quantum_run: u32) -> QueuedProcess {
-        QueuedProcess {
-            entered_number: self.entered_number,
-            process: self.process.execute(quantum_run),
-        }
-    }
-}
-
 pub struct Scheduler {
     pub process_queue: Vec<QueuedProcess>,
     pub finished_processes: Vec<QueuedProcess>,
