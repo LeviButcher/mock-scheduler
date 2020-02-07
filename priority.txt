@@ -1,0 +1,20 @@
+The Scheduler Report - By: Levi Butcher
+
+CPU_QUANTUM_TIME: 8	CONTEXT_SWITCH:4
+|         Name         | Avg Turnaround Time | Waiting Time |
+|  FiFo                |          171         |       129     |
+|  Shortest Next       |          163         |       121     |
+|  Shortest Remaining  |          139         |       97     |
+
+CPU_QUANTUM_TIME: 4	CONTEXT_SWITCH:0
+|         Name         | Avg Turnaround Time | Waiting Time |
+|  FiFo                |          213         |       171     |
+|  Shortest Next       |          152         |       110     |
+|  Shortest Remaining  |          150         |       108     |
+
+CPU_QUANTUM_TIME: 4	CONTEXT_SWITCH:1
+|         Name         | Avg Turnaround Time | Waiting Time |
+|  FiFo                |          242         |       200     |
+|  Shortest Next       |          174         |       132     |
+|  Shortest Remaining  |          172         |       130     |
+
