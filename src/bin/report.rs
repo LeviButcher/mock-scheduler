@@ -4,7 +4,7 @@ use std::{cmp, thread};
 const NUM_OF_PROCESSES: u32 = 10;
 
 fn main() {
-    println!("The Scheduler Report - By: Levi Butcher");
+    println!("The Scheduler Report - By: Levi Butcher\n");
     let report_runs = vec![(4, 0), (4, 1), (8, 4)];
     let num_of_reports = report_runs.len();
     let result = report_runs

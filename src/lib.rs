@@ -18,7 +18,6 @@ impl Scheduler {
         }
     }
     pub fn add_process(mut self, proc: FakeProcess) -> Scheduler {
-        // Crying Functional Tears
         self.process_queue.push(QueuedProcess {
             entered_number: self.next_entered_number,
             process: proc,
@@ -32,7 +31,7 @@ impl Scheduler {
     pub fn execute(self, cpu_cycle_quantum_usage: u32) -> Scheduler {
         match self.scheduled_process() {
             Some(p) => {
-                let p = p.execute(cpu_cycle_quantum_usage);
+                let (p, ran_for) = p.execute(cpu_cycle_quantum_usage);
                 let updated_proc = vec![p];
                 let queue = match self.process_queue.as_slice().split_first() {
                     Some((_, rest)) => rest,
@@ -41,7 +40,7 @@ impl Scheduler {
                 let queue: Vec<QueuedProcess> = queue
                     .to_vec()
                     .into_iter()
-                    .map(|x| x.wait(cpu_cycle_quantum_usage))
+                    .map(|x| x.wait(ran_for))
                     .collect();
 
                 Scheduler {
@@ -54,9 +53,6 @@ impl Scheduler {
         }
     }
 
-    /// Only re-sort the queue, won't remove processes
-    /// finished process should be sorted last
-    /// When you schedule next, should you only charge wait times only if scheduled process changes
     pub fn schedule_next<F>(self, compare: F, context_switch_cost: u32) -> Self
     where
         F: Fn(&QueuedProcess, &QueuedProcess) -> cmp::Ordering,
@@ -192,7 +188,6 @@ mod test {
 
     #[test]
     fn scheduler_schedule_next_by_entered_should_be_in_expected_order() {
-        // add 1, 2, then 3
         let expected = vec![3, 4, 5];
         let scheduler = Scheduler::new()
             .add_process(FakeProcess::new(1, 10))

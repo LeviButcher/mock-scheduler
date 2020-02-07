@@ -13,10 +13,14 @@ impl QueuedProcess {
             process: self.process.wait(quantum_wait),
         }
     }
-    pub fn execute(&self, quantum_run: u32) -> QueuedProcess {
-        QueuedProcess {
-            entered_number: self.entered_number,
-            process: self.process.execute(quantum_run),
-        }
+    pub fn execute(&self, quantum_run: u32) -> (QueuedProcess, u32) {
+        let (process, ran_for) = self.process.execute(quantum_run);
+        (
+            QueuedProcess {
+                entered_number: self.entered_number,
+                process,
+            },
+            ran_for,
+        )
     }
 }
