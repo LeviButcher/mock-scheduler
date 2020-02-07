@@ -6,13 +6,14 @@ const NUM_OF_PROCESSES: u32 = 10;
 fn main() {
     println!("The Scheduler Report - By: Levi Butcher\n");
     let report_runs = vec![(4, 0), (4, 1), (8, 4)];
-    let num_of_reports = report_runs.len();
-    let result = report_runs
+    let threads = report_runs
         .into_iter()
         .map(|(quantum, switch)| thread::spawn(move || run_report(quantum, switch)))
-        .map(|thread| thread.join())
-        .collect::<Vec<Result<_, _>>>();
-    assert_eq!(num_of_reports, result.len());
+        .collect::<Vec<thread::JoinHandle<()>>>();
+
+    for handle in threads {
+        handle.join().expect("Thread failed to run");
+    }
 }
 
 fn run_report(quantum_used: u32, context_switch: u32) {
@@ -27,11 +28,8 @@ fn run_report(quantum_used: u32, context_switch: u32) {
         .into_iter()
         .zip(schedulers.into_iter())
         .map(|(algorithm, scheduler)| {
-            thread::spawn(move || {
-                run_process_on_scheduler(scheduler, &algorithm, quantum_used, context_switch)
-            })
+            run_process_on_scheduler(scheduler, &algorithm, quantum_used, context_switch)
         })
-        .map(|handle| handle.join().unwrap())
         .collect();
 
     let average_turnarounds: Vec<u32> = schedulers
