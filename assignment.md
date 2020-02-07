@@ -9,48 +9,54 @@ subtitle: Assignment 2
 ## Priority Scheduling
 
 CPU_QUANTUM_TIME: 4 CONTEXT_SWITCH:0
-| Name | Avg Turnaround Time | Waiting Time |
-| --|--|--|--|
-| FiFo | 213 | 171 |
-| Shortest Next | 152 | 110 |
-| Shortest Remaining | 150 | 108 |
+
+| Name               | Avg Turnaround Time | Waiting Time |
+| ------------------ | ------------------- | ------------ |
+| FiFo               | 213                 | 171          |
+| Shortest Next      | 152                 | 110          |
+| Shortest Remaining | 150                 | 108          |
 
 CPU_QUANTUM_TIME: 4 CONTEXT_SWITCH:1
-| Name | Avg Turnaround Time | Waiting Time |
-| --|--|--|--|
-| FiFo | 242 | 200 |
-| Shortest Next | 174 | 132 |
-| Shortest Remaining | 172 | 130 |
+
+| Name               | Avg Turnaround Time | Waiting Time |
+| ------------------ | ------------------- | ------------ |
+| FiFo               | 242                 | 200          |
+| Shortest Next      | 174                 | 132          |
+| Shortest Remaining | 172                 | 130          |
 
 CPU_QUANTUM_TIME: 8 CONTEXT_SWITCH:4
-| Name | Avg Turnaround Time | Waiting Time |
-| --|--|--|--|
-| FiFo | 171 | 129 |
-| Shortest Next | 163 | 121 |
-| Shortest Remaining | 139 | 97 |
+
+| Name               | Avg Turnaround Time | Waiting Time |
+| ------------------ | ------------------- | ------------ |
+| FiFo               | 171                 | 129          |
+| Shortest Next      | 163                 | 121          |
+| Shortest Remaining | 139                 | 97           |
 
 ## Without Priority Scheduling
 
 CPU_QUANTUM_TIME: 4 CONTEXT_SWITCH:0
-| Name | Avg Turnaround Time | Waiting Time |
-| --|--|--|--|
-| FiFo | 245 | 203 |
-| Shortest Next | 171 | 129 |
-| Shortest Remaining | 165 | 123 |
+
+| Name               | Avg Turnaround Time | Waiting Time |
+| ------------------ | ------------------- | ------------ |
+| FiFo               | 245                 | 203          |
+| Shortest Next      | 171                 | 129          |
+| Shortest Remaining | 165                 | 123          |
 
 CPU_QUANTUM_TIME: 4 CONTEXT_SWITCH:1
-| Name | Avg Turnaround Time | Waiting Time |
-| --|--|--|--|
-| FiFo | 307 | 265 |
-| Shortest Next | 214 | 172 |
-| Shortest Remaining | 206 | 164 |
+
+| Name               | Avg Turnaround Time | Waiting Time |
+| ------------------ | ------------------- | ------------ |
+| FiFo               | 307                 | 265          |
+| Shortest Next      | 214                 | 172          |
+| Shortest Remaining | 206                 | 164          |
 
 CPU_QUANTUM_TIME: 8 CONTEXT_SWITCH:4
-| Name | Avg Turnaround Time | Waiting Time |
-| --|--|--|--|
-| FiFo | 297 | 255 |
-| Shortest Next | 233 | 191 |
-| Shortest Remaining | 209 | 167 |
+
+| Name               | Avg Turnaround Time | Waiting Time |
+| ------------------ | ------------------- | ------------ |
+| FiFo               | 297                 | 255          |
+| Shortest Next      | 233                 | 191          |
+| Shortest Remaining | 209                 | 167          |
 
 # Q & A
 
