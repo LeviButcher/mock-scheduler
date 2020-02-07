@@ -80,16 +80,16 @@ fn run_report(quantum_used: u32, context_switch: u32) {
 fn get_process(cpu_cycle: u32) -> Option<FakeProcess> {
     let choose_process = cpu_cycle;
     match choose_process {
-        0 => Some(FakeProcess::new(1, 60)),
-        3 => Some(FakeProcess::new(2, 20)),
-        5 => Some(FakeProcess::new(3, 10)),
-        9 => Some(FakeProcess::new(4, 70)),
-        10 => Some(FakeProcess::new(5, 50)),
-        12 => Some(FakeProcess::new(6, 30)),
-        14 => Some(FakeProcess::new(7, 40)),
-        16 => Some(FakeProcess::new(8, 50)),
-        17 => Some(FakeProcess::new(9, 70)),
-        19 => Some(FakeProcess::new(10, 20)),
+        0 => Some(FakeProcess::new(1, 60, 1)),
+        3 => Some(FakeProcess::new(2, 20, 2)),
+        5 => Some(FakeProcess::new(3, 10, 3)),
+        9 => Some(FakeProcess::new(4, 70, 4)),
+        10 => Some(FakeProcess::new(5, 50, 1)),
+        12 => Some(FakeProcess::new(6, 30, 2)),
+        14 => Some(FakeProcess::new(7, 40, 3)),
+        16 => Some(FakeProcess::new(8, 50, 4)),
+        17 => Some(FakeProcess::new(9, 70, 1)),
+        19 => Some(FakeProcess::new(10, 20, 2)),
         _ => None,
     }
 }

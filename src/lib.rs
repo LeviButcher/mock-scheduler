@@ -107,15 +107,15 @@ mod test {
     fn scheduler_add_process_should_add_process() {
         let scheduler = Scheduler::new();
         assert_eq!(scheduler.process_queue.len(), 0);
-        let scheduler = scheduler.add_process(FakeProcess::new(0, 32));
+        let scheduler = scheduler.add_process(FakeProcess::new(0, 32, 1));
         assert_eq!(scheduler.process_queue.len(), 1);
     }
 
     #[test]
     fn scheduler_add_process_should_add_process_to_back() {
         let scheduler = Scheduler::new()
-            .add_process(FakeProcess::new(0, 32))
-            .add_process(FakeProcess::new(1, 42));
+            .add_process(FakeProcess::new(0, 32, 1))
+            .add_process(FakeProcess::new(1, 42, 1));
         let last_process = scheduler.process_queue.last().unwrap();
         assert_eq!(last_process.process.id, 1);
     }
@@ -126,7 +126,7 @@ mod test {
         let run_time = 5;
         let expected_time = start_quantum - run_time;
         let scheduler = Scheduler::new()
-            .add_process(FakeProcess::new(0, start_quantum))
+            .add_process(FakeProcess::new(0, start_quantum, 1))
             .execute(run_time);
         let ran_proc = scheduler.scheduled_process().unwrap();
         assert_eq!(ran_proc.process.quantum_left, expected_time);
@@ -137,9 +137,9 @@ mod test {
         let expected_time = vec![5, 5, 5];
         let run_time = 5;
         let scheduler = Scheduler::new()
-            .add_process(FakeProcess::new(0, 25))
-            .add_process(FakeProcess::new(1, 30))
-            .add_process(FakeProcess::new(2, 35))
+            .add_process(FakeProcess::new(0, 25, 1))
+            .add_process(FakeProcess::new(1, 30, 1))
+            .add_process(FakeProcess::new(2, 35, 1))
             .execute(run_time);
         let total_times: Vec<u32> = scheduler
             .process_queue
@@ -156,8 +156,8 @@ mod test {
         let expected_process_id = 1;
 
         let scheduler = Scheduler::new()
-            .add_process(FakeProcess::new(0, 10))
-            .add_process(FakeProcess::new(expected_process_id, 15))
+            .add_process(FakeProcess::new(0, 10, 1))
+            .add_process(FakeProcess::new(expected_process_id, 1, 15))
             .execute(run_time)
             .schedule_next(algorithms::first_come, switch_cost);
 
@@ -171,8 +171,8 @@ mod test {
         let switch_cost = 5;
         let expected_total_times = vec![switch_cost, switch_cost];
         let scheduler = Scheduler::new()
-            .add_process(FakeProcess::new(0, 10))
-            .add_process(FakeProcess::new(1, 15))
+            .add_process(FakeProcess::new(0, 10, 1))
+            .add_process(FakeProcess::new(1, 15, 1))
             .schedule_next(algorithms::first_come, switch_cost);
 
         assert_eq!(1, scheduler.scheduled_process().unwrap().process.id);
@@ -190,9 +190,9 @@ mod test {
     fn scheduler_schedule_next_by_entered_should_be_in_expected_order() {
         let expected = vec![3, 4, 5];
         let scheduler = Scheduler::new()
-            .add_process(FakeProcess::new(1, 10))
-            .add_process(FakeProcess::new(2, 10))
-            .add_process(FakeProcess::new(3, 10))
+            .add_process(FakeProcess::new(1, 10, 1))
+            .add_process(FakeProcess::new(2, 10, 1))
+            .add_process(FakeProcess::new(3, 10, 1))
             .schedule_next(algorithms::first_come, 1)
             .schedule_next(algorithms::first_come, 1);
 
@@ -209,9 +209,9 @@ mod test {
         let switch_cost = 5;
         let expected_order = vec![2, 3, 1];
         let scheduler = Scheduler::new()
-            .add_process(FakeProcess::new(1, 20))
-            .add_process(FakeProcess::new(2, 5))
-            .add_process(FakeProcess::new(3, 15))
+            .add_process(FakeProcess::new(1, 20, 1))
+            .add_process(FakeProcess::new(2, 5, 1))
+            .add_process(FakeProcess::new(3, 15, 1))
             .schedule_next(algorithms::shortest_next, switch_cost);
         let process_order: Vec<u32> = scheduler
             .process_queue
@@ -227,8 +227,8 @@ mod test {
         let expected_order = vec![2, 1];
 
         let scheduler = Scheduler::new()
-            .add_process(FakeProcess::new(1, 20))
-            .add_process(FakeProcess::new(2, 5))
+            .add_process(FakeProcess::new(1, 20, 1))
+            .add_process(FakeProcess::new(2, 5, 1))
             .execute(5)
             .schedule_next(algorithms::first_come, switch_cost);
 
@@ -244,7 +244,7 @@ mod test {
     fn scheduler_schedule_next_should_put_finished_process_in_finished() {
         let switch_cost = 5;
         let scheduler = Scheduler::new()
-            .add_process(FakeProcess::new(1, 0))
+            .add_process(FakeProcess::new(1, 0, 1))
             .schedule_next(algorithms::shortest_remain, switch_cost);
         assert_eq!(true, scheduler.process_queue.is_empty());
         assert_eq!(1, scheduler.finished_processes.len());
