@@ -10,12 +10,12 @@ const CPU_CYCLE_QUANTUM_USED: u32 = 4;
 // How much time it takes to swap a process
 const CONTEXT_SWITCH_TIME: u32 = 0;
 
-const LOOP_PAUSE: time::Duration = time::Duration::from_millis(1000);
+const LOOP_PAUSE: time::Duration = time::Duration::from_millis(2000);
 
 fn main() {
     let mut scheduler = Scheduler::new();
     let mut cycle_count = 0;
-    let chosen_algorithm = algorithms::shortest_remain;
+    let chosen_algorithm = algorithms::shortest_next;
 
     loop {
         println!(
@@ -30,7 +30,7 @@ fn main() {
         }
         if scheduler.is_queue_empty() {
             println!("IDLE, no more work");
-            continue;
+            break;
         }
 
         scheduler = scheduler
@@ -41,21 +41,24 @@ fn main() {
         thread::sleep(LOOP_PAUSE);
         println!("{}", clear::All);
     }
+    for proc in scheduler.finished_processes {
+        println!("{}", proc.process);
+    }
 }
 
 fn get_process(cpu_cycle: u32) -> Option<FakeProcess> {
     unsafe {
         match cpu_cycle {
             0 => Some(FakeProcess::new(NEXT_ID, 60, 1)),
-            3 => Some(FakeProcess::new(NEXT_ID, 20, 2)),
-            5 => Some(FakeProcess::new(NEXT_ID, 10, 3)),
-            9 => Some(FakeProcess::new(NEXT_ID, 70, 4)),
+            3 => Some(FakeProcess::new(NEXT_ID, 20, 1)),
+            5 => Some(FakeProcess::new(NEXT_ID, 10, 1)),
+            9 => Some(FakeProcess::new(NEXT_ID, 70, 1)),
             10 => Some(FakeProcess::new(NEXT_ID, 50, 1)),
-            12 => Some(FakeProcess::new(NEXT_ID, 30, 2)),
-            14 => Some(FakeProcess::new(NEXT_ID, 40, 3)),
-            16 => Some(FakeProcess::new(NEXT_ID, 50, 4)),
+            12 => Some(FakeProcess::new(NEXT_ID, 30, 1)),
+            14 => Some(FakeProcess::new(NEXT_ID, 40, 1)),
+            16 => Some(FakeProcess::new(NEXT_ID, 50, 1)),
             17 => Some(FakeProcess::new(NEXT_ID, 70, 1)),
-            19 => Some(FakeProcess::new(NEXT_ID, 20, 2)),
+            19 => Some(FakeProcess::new(NEXT_ID, 20, 1)),
             _ => None,
         }
     }

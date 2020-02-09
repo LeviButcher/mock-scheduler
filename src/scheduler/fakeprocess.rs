@@ -64,12 +64,13 @@ impl fmt::Display for FakeProcess {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
-            "| id: {} | priority: {} | q-left:{} | q-ran-for: {} | turnaround: {} |",
+            "| id: {} | priority: {} | q-left:{} | q-ran-for: {} | turnaround: {} | wait: {} |",
             self.id,
             self.priority,
             self.quantum_left,
             self.quantum_ran_for,
-            self.get_turnaround_time()
+            self.get_turnaround_time(),
+            self.time_spent_waiting
         )
     }
 }
