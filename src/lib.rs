@@ -28,7 +28,7 @@ impl Scheduler {
             next_entered_number: self.next_entered_number + 1,
         }
     }
-    pub fn execute(self, cpu_cycle_quantum_usage: u32) -> Scheduler {
+    pub fn execute(self, cpu_cycle_quantum_usage: u32) -> RanScheduler {
         match self.scheduled_process() {
             Some(p) => {
                 let (p, ran_for) = p.execute(cpu_cycle_quantum_usage);
@@ -42,23 +42,43 @@ impl Scheduler {
                     .into_iter()
                     .map(|x| x.wait(ran_for))
                     .collect();
-
-                Scheduler {
-                    process_queue: [&updated_proc[..], &queue[..]].concat(),
-                    finished_processes: self.finished_processes,
-                    next_entered_number: self.next_entered_number,
+                RanScheduler {
+                    scheduler: Scheduler {
+                        process_queue: [&updated_proc[..], &queue[..]].concat(),
+                        finished_processes: self.finished_processes,
+                        next_entered_number: self.next_entered_number,
+                    },
                 }
             }
-            None => self,
+            None => RanScheduler { scheduler: self },
         }
     }
 
-    pub fn schedule_next<F>(self, compare: F, context_switch_cost: u32) -> Self
+    pub fn scheduled_process(&self) -> Option<&QueuedProcess> {
+        self.process_queue.first()
+    }
+    pub fn print_process_table(&self) {
+        for p in &self.process_queue[..] {
+            println!("| entered_num: {} {}", p.entered_number, p.process);
+        }
+    }
+
+    pub fn is_queue_empty(&self) -> bool {
+        self.process_queue.is_empty()
+    }
+}
+
+pub struct RanScheduler {
+    scheduler: Scheduler,
+}
+
+impl RanScheduler {
+    pub fn schedule_next<F>(self, compare: F, context_switch_cost: u32) -> Scheduler
     where
         F: Fn(&QueuedProcess, &QueuedProcess) -> cmp::Ordering,
     {
-        let mut queue = self.process_queue;
-        let mut finished_processes = self.finished_processes;
+        let mut queue = self.scheduler.process_queue;
+        let mut finished_processes = self.scheduler.finished_processes;
         let scheduled = queue.remove(0);
 
         queue.sort_by(compare);
@@ -73,29 +93,24 @@ impl Scheduler {
             return Scheduler {
                 process_queue: queue,
                 finished_processes,
-                next_entered_number: self.next_entered_number,
+                next_entered_number: self.scheduler.next_entered_number,
             };
         }
 
         let scheduler = Scheduler {
             process_queue: queue,
             finished_processes,
-            next_entered_number: self.next_entered_number,
+            next_entered_number: self.scheduler.next_entered_number,
         };
         scheduler.add_process(scheduled.process.wait(context_switch_cost))
     }
 
-    pub fn scheduled_process(&self) -> Option<&QueuedProcess> {
-        self.process_queue.first()
-    }
-    pub fn print_process_table(&self) {
-        for p in &self.process_queue[..] {
-            println!("| entered_num: {} {}", p.entered_number, p.process);
-        }
+    pub fn ran_process(&self) -> Option<&QueuedProcess> {
+        self.scheduler.scheduled_process()
     }
 
-    pub fn is_queue_empty(&self) -> bool {
-        self.process_queue.is_empty()
+    pub fn print_process_table(&self) {
+        self.scheduler.print_process_table();
     }
 }
 
@@ -128,7 +143,7 @@ mod test {
         let scheduler = Scheduler::new()
             .add_process(FakeProcess::new(0, start_quantum, 1))
             .execute(run_time);
-        let ran_proc = scheduler.scheduled_process().unwrap();
+        let ran_proc = scheduler.ran_process().unwrap();
         assert_eq!(ran_proc.process.quantum_left, expected_time);
     }
 
@@ -136,12 +151,13 @@ mod test {
     fn scheduler_execute_should_increase_total_time_on_all_processes() {
         let expected_time = vec![5, 5, 5];
         let run_time = 5;
-        let scheduler = Scheduler::new()
+        let ran_scheduler = Scheduler::new()
             .add_process(FakeProcess::new(0, 25, 1))
             .add_process(FakeProcess::new(1, 30, 1))
             .add_process(FakeProcess::new(2, 35, 1))
             .execute(run_time);
-        let total_times: Vec<u32> = scheduler
+        let total_times: Vec<u32> = ran_scheduler
+            .scheduler
             .process_queue
             .into_iter()
             .map(|x| x.process.get_turnaround_time())
@@ -167,12 +183,13 @@ mod test {
     }
 
     #[test]
-    fn scheduler_schedule_next_by_id_should_increment_all_process_total_time_by_switch_cost() {
+    fn ran_scheduler_schedule_next_by_id_should_increment_all_process_total_time_by_switch_cost() {
         let switch_cost = 5;
         let expected_total_times = vec![switch_cost, switch_cost];
         let scheduler = Scheduler::new()
             .add_process(FakeProcess::new(0, 10, 1))
             .add_process(FakeProcess::new(1, 15, 1))
+            .execute(0)
             .schedule_next(algorithms::first_come, switch_cost);
 
         assert_eq!(1, scheduler.scheduled_process().unwrap().process.id);
@@ -193,7 +210,9 @@ mod test {
             .add_process(FakeProcess::new(1, 10, 1))
             .add_process(FakeProcess::new(2, 10, 1))
             .add_process(FakeProcess::new(3, 10, 1))
+            .execute(1)
             .schedule_next(algorithms::first_come, 1)
+            .execute(1)
             .schedule_next(algorithms::first_come, 1);
 
         let order_of_schedule: Vec<u32> = scheduler
@@ -208,12 +227,13 @@ mod test {
     fn scheduler_schedule_next_by_quantum_left_should_be_in_order() {
         let switch_cost = 5;
         let expected_order = vec![2, 3, 1];
-        let scheduler = Scheduler::new()
+        let ran_scheduler = Scheduler::new()
             .add_process(FakeProcess::new(1, 20, 1))
             .add_process(FakeProcess::new(2, 5, 1))
             .add_process(FakeProcess::new(3, 15, 1))
+            .execute(1)
             .schedule_next(algorithms::shortest_next, switch_cost);
-        let process_order: Vec<u32> = scheduler
+        let process_order: Vec<u32> = ran_scheduler
             .process_queue
             .into_iter()
             .map(|x| x.process.id)
@@ -245,6 +265,7 @@ mod test {
         let switch_cost = 5;
         let scheduler = Scheduler::new()
             .add_process(FakeProcess::new(1, 0, 1))
+            .execute(0)
             .schedule_next(algorithms::shortest_remain, switch_cost);
         assert_eq!(true, scheduler.process_queue.is_empty());
         assert_eq!(1, scheduler.finished_processes.len());
